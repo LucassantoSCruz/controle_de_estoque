@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const port = 3000;
+const path = require('path');
 
 const routeCategoria = require('./route/routeCategoria');
 const routeProduto = require('./route/routeProduto');
@@ -13,6 +14,8 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
 

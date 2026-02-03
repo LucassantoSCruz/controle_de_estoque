@@ -25,6 +25,10 @@ const modelProduto = connection.define('tbl_produto', {
     type: sequelize.INTEGER,
     allowNull: false,
   },
+  caminho_imagem: {
+    type: sequelize.STRING,
+    allowNull: true,
+  },
 });
 
 modelCategoria.hasMany(modelProduto, {

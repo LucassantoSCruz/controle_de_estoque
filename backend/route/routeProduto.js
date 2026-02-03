@@ -1,23 +1,26 @@
-/*IMPORTA O PACOTE DO EXPRESS PARA O SCRIPT index.js*/
 const express = require('express');
-
+const multer = require('multer');
 const modelProduto = require('../model/modelProduto');
 const modelCategoria = require('../model/modelCategoria');
 
-/*GERENCIADOR DE ROTAS DO EXPRESS*/
 const router = express.Router();
 
-/** ROTAS DE CRUD DE PRODUTO **/
+const upload = multer({ dest: 'uploads/' });
 
-//ROTA DE CADASTRO DE PRODUTOS
-//NOME (P1, P2, P3, P4){}
-router.post('/cadastrarProduto', (req, res) => {
+router.post('/cadastrarProduto', upload.single('image'), async (req, res) => {
   console.log(req.body);
 
   let { nome_produto, preco_produto, estoque_atual, cod_categoria } = req.body;
+  const caminho_imagem = req.file ? req.file.filename : null;
 
   modelProduto
-    .create({ nome_produto, preco_produto, estoque_atual, cod_categoria })
+    .create({
+      nome_produto,
+      preco_produto,
+      estoque_atual,
+      cod_categoria,
+      caminho_imagem,
+    })
     .then(() => {
       return res.status(201).json({
         erroStatus: false,
@@ -33,7 +36,6 @@ router.post('/cadastrarProduto', (req, res) => {
     });
 });
 
-//ROTA DE LISTAGEM DE PRODUTO SEM CRITÉRIO
 router.get('/listarProduto', (req, res) => {
   modelProduto
     .findAll()

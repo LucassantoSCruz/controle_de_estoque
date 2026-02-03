@@ -49,7 +49,8 @@ const Products = () => {
           <table className="table table-hover">
             <thead>
               <tr>
-                <th style={{ width: '30%' }}>Nome do Produto</th>
+                <th style={{ width: '10%' }}>Nome do Produto</th>
+                <th style={{ width: '20%' }}>Nome do Produto</th>
                 <th style={{ width: '20%' }}>Categoria</th>
                 <th style={{ width: '15%' }}>Quantidade</th>
                 <th style={{ width: '15%' }}>Preço</th>
@@ -60,6 +61,13 @@ const Products = () => {
               {Array.isArray(products) && products.length > 0 ? (
                 products.map((product) => (
                   <tr key={product.cod_produto}>
+                    <td>
+                      <img
+                        src={`http://localhost:3000/uploads/${product.caminho_imagem}.png`}
+                        alt={product.caminho_imagem}
+                        class="img-thumbnail"
+                      />
+                    </td>
                     <td>{product.nome_produto}</td>
                     <td>{product.nome_categoria}</td>
                     <td>{product.estoque_atual}</td>
