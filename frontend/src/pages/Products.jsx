@@ -49,7 +49,7 @@ const Products = () => {
           <table className="table table-hover">
             <thead>
               <tr>
-                <th style={{ width: '10%' }}>Nome do Produto</th>
+                <th style={{ width: '10%' }}>Imagem</th>
                 <th style={{ width: '20%' }}>Nome do Produto</th>
                 <th style={{ width: '20%' }}>Categoria</th>
                 <th style={{ width: '15%' }}>Quantidade</th>
@@ -63,7 +63,7 @@ const Products = () => {
                   <tr key={product.cod_produto}>
                     <td>
                       <img
-                        src={`http://localhost:3000/uploads/${product.caminho_imagem}.png`}
+                        src={`http://localhost:3000/uploads/${product.caminho_imagem}`}
                         alt={product.caminho_imagem}
                         class="img-thumbnail"
                       />
@@ -80,6 +80,7 @@ const Products = () => {
                           preco={product.preco_produto}
                           estoque={product.estoque_atual}
                           categoria={product.cod_categoria}
+                          image={product.caminho_imagem}
                         />
                         <button
                           type="button"

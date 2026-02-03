@@ -10,6 +10,7 @@ const ModalEditProduto = (props) => {
   const [novoPreco, setNovoPreco] = useState(props.preco);
   const [novoEstoque, setNovoEstoque] = useState(props.estoque);
   const [novoCodCategoria, setNovoCodCategoria] = useState(props.categoria);
+  const [image, setImage] = useState(props.image);
 
   const [listagemCategoria, setListagemCategoria] = useState([]);
 
@@ -47,18 +48,34 @@ const ModalEditProduto = (props) => {
   function handleChangeCodCategoria(e) {
     setNovoCodCategoria(e.target.value);
   }
+  const handleFileChange = (e) => {
+    setImage(e.target.files[0]);
+  };
 
   function handleSubmit(e) {
+    const formData = new FormData();
+    formData.append('cod_produto', props.id);
+    formData.append('nome_produto', novoProduto);
+    formData.append('preco_produto', novoPreco);
+    formData.append('estoque_atual', novoEstoque);
+    formData.append('cod_categoria', novoCodCategoria);
+
+    if (image instanceof File) {
+      // só envia o arquivo se for um File (upload novo)
+      formData.append('image', image);
+    }
+    // se image for uma string (URL da imagem atual), você não envia o campo image
+    // e o backend mantém a imagem antiga
+
     axios
-      .put(ENDERECO_API + '/alterarProduto', {
-        cod_produto: props.id,
-        nome_produto: novoProduto,
-        preco_produto: novoPreco,
-        estoque_atual: novoEstoque,
-        cod_categoria: novoCodCategoria,
+      .put(ENDERECO_API + '/alterarProduto', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
       .then(function (response) {
         console.log(response);
+        closeModal();
       })
       .catch(function (error) {
         console.log(error);
@@ -95,6 +112,14 @@ const ModalEditProduto = (props) => {
                 ></button>
               </div>
               <div className="modal-body">
+                <label className="form-label">Imagem do produto</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={handleFileChange}
+                  name="image"
+                />
+
                 <label class="form-label">Nome</label>
                 <input
                   class="form-control"
@@ -164,10 +189,10 @@ const ModalEditProduto = (props) => {
                   data-bs-dismiss="modal"
                   onClick={closeModal}
                 >
-                  Fechar
+                  Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Cadastrar
+                  Confirmar
                 </button>
               </div>
             </div>

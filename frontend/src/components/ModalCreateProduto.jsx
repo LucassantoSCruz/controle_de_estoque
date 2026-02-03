@@ -10,6 +10,7 @@ const ModalCreateProduto = () => {
   const [novoPreco, setNovoPreco] = useState('');
   const [novoEstoque, setNovoEstoque] = useState('');
   const [novoCodCategoria, setNovoCodCategoria] = useState('');
+  const [image, setImage] = useState(null);
 
   const [listagemCategoria, setListagemCategoria] = useState([]);
 
@@ -47,17 +48,34 @@ const ModalCreateProduto = () => {
   function handleChangeCodCategoria(e) {
     setNovoCodCategoria(e.target.value);
   }
+  const handleFileChange = (e) => {
+    setImage(e.target.files[0]);
+  };
 
   function handleSubmit(e) {
+    const formData = new FormData();
+    formData.append('nome_produto', novoProduto);
+    formData.append('preco_produto', novoPreco);
+    formData.append('estoque_atual', novoEstoque);
+    formData.append('cod_categoria', novoCodCategoria);
+    if (image) {
+      formData.append('image', image);
+    }
+
     axios
-      .post(ENDERECO_API + '/cadastrarProduto', {
-        nome_produto: novoProduto,
-        preco_produto: novoPreco,
-        estoque_atual: novoEstoque,
-        cod_categoria: novoCodCategoria,
+      .post(ENDERECO_API + '/cadastrarProduto', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
       .then(function (response) {
         console.log(response);
+        setNovoProduto('');
+        setNovoPreco('');
+        setNovoEstoque('');
+        setNovoCodCategoria('');
+        setImage(null);
+        closeModal();
       })
       .catch(function (error) {
         console.log(error);
@@ -94,6 +112,13 @@ const ModalCreateProduto = () => {
                 ></button>
               </div>
               <div className="modal-body">
+                <label className="form-label">Imagem do produto</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={handleFileChange}
+                />
+
                 <label class="form-label">Nome</label>
                 <input
                   class="form-control"
@@ -163,10 +188,10 @@ const ModalCreateProduto = () => {
                   data-bs-dismiss="modal"
                   onClick={closeModal}
                 >
-                  Fechar
+                  Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Cadastrar
+                  Confirmar
                 </button>
               </div>
             </div>

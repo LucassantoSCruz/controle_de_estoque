@@ -1,17 +1,31 @@
 const express = require('express');
 const multer = require('multer');
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
+
 const modelProduto = require('../model/modelProduto');
 const modelCategoria = require('../model/modelCategoria');
 
 const router = express.Router();
 
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 router.post('/cadastrarProduto', upload.single('image'), async (req, res) => {
-  console.log(req.body);
+  const { nome_produto, preco_produto, estoque_atual, cod_categoria } =
+    req.body;
 
-  let { nome_produto, preco_produto, estoque_atual, cod_categoria } = req.body;
-  const caminho_imagem = req.file ? req.file.filename : null;
+  let caminho_imagem = null;
+
+  if (req.file) {
+    const filename = `${Date.now()}.png`;
+    const outputPath = path.join(__dirname, '..', 'uploads', filename);
+
+    await sharp(req.file.buffer).png().toFile(outputPath);
+
+    caminho_imagem = filename;
+  }
 
   modelProduto
     .create({
@@ -80,8 +94,7 @@ router.get('/listarProdutoComCategoria', (req, res) => {
     });
 });
 
-//ROTA DE ALTERAÇÃO DE PRODUTO
-router.put('/alterarProduto', (req, res) => {
+router.put('/alterarProduto', upload.single('image'), async (req, res) => {
   const {
     cod_produto,
     nome_produto,
@@ -90,15 +103,30 @@ router.put('/alterarProduto', (req, res) => {
     cod_categoria,
   } = req.body;
 
+  // monta o objeto de atualização com os campos de texto
+  const updates = {
+    nome_produto,
+    preco_produto,
+    estoque_atual,
+    cod_categoria,
+  };
+
+  // se o usuário enviou uma nova imagem, salva ela e atualiza o caminho
+  if (req.file) {
+    const filename = `${Date.now()}.png`;
+    const outputPath = path.join(__dirname, '..', 'uploads', filename);
+
+    await sharp(req.file.buffer).png().toFile(outputPath);
+
+    updates.caminho_imagem = filename; // coluna no banco
+  }
+
   modelProduto
-    .update(
-      { nome_produto, preco_produto, estoque_atual, cod_categoria },
-      { where: { cod_produto } }
-    )
+    .update(updates, { where: { cod_produto } }) // usa o objeto `updates`
     .then(() => {
       return res.status(200).json({
         erroStatus: false,
-        mensagemStatus: 'PRODUTO ALTERADA COM SUCESSO.',
+        mensagemStatus: 'PRODUTO ALTERADO COM SUCESSO.',
       });
     })
     .catch((error) => {
@@ -110,7 +138,6 @@ router.put('/alterarProduto', (req, res) => {
     });
 });
 
-//ROTA DE EXCLUSÃO DE PRODUTO
 router.delete('/excluirProduto/:cod_produto', (req, res) => {
   console.log(req.params);
   let { cod_produto } = req.params;
