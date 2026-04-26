@@ -1,41 +1,60 @@
-const Navbar = () => (
-  <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        Navbar
-      </a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="/">
-              Home
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/categories">
-              Categorias
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/products">
-              Produtos
-            </a>
-          </li>
-        </ul>
+import logo from '../assets/logo.png';
+import { Link, useLocation } from 'react-router-dom';
+
+const Navbar = () => {
+  const { pathname } = useLocation();
+
+  return (
+    <nav
+      className="navbar navbar-expand-lg"
+      style={{ backgroundColor: '#1a3c62' }}
+    >
+      <div className="container-fluid">
+        <Link
+          className="navbar-brand d-flex align-items-center gap-2 text-white"
+          to="/"
+        >
+          <img src={logo} alt="Logo" width="48" height="48" />
+          Controle de Estoque
+        </Link>
+
+        <button
+          className="navbar-toggler border-white"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span
+            className="navbar-toggler-icon"
+            style={{ filter: 'invert(1)' }}
+          />
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
+            {[
+              { to: '/', label: 'Home' },
+              { to: '/categories', label: 'Categorias' },
+              { to: '/products', label: 'Produtos' },
+              { to: '/movimentacoes', label: 'Movimentações' },
+            ].map(({ to, label }) => (
+              <li className="nav-item" key={to}>
+                <Link
+                  className={`nav-link text-white ${pathname === to ? 'fw-bold' : ''}`}
+                  to={to}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </div>
-  </nav>
-);
+    </nav>
+  );
+};
 
 export default Navbar;

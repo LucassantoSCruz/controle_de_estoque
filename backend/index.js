@@ -4,6 +4,8 @@ const cors = require('cors');
 const port = 3000;
 const path = require('path');
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 const routeCategoria = require('./route/routeCategoria');
 const routeProduto = require('./route/routeProduto');
 const routeMovimentacao = require('./route/routeMovimentacao');

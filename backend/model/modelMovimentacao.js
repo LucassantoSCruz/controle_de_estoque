@@ -1,6 +1,7 @@
 const sequelize = require('sequelize');
 
 const connection = require('../database/database');
+const modelProduto = require('./modelProduto');
 
 const modelMovimentacao = connection.define('tbl_movimentacao', {
   cod_movimentacao: {
@@ -24,10 +25,23 @@ const modelMovimentacao = connection.define('tbl_movimentacao', {
     type: sequelize.DATE,
     allowNull: false,
   },
+  data_registro: {
+    type: sequelize.DATE,
+    allowNull: false,
+    defaultValue: sequelize.NOW,
+  },
   observacao_movimentacao: {
     type: sequelize.STRING(150),
     allowNull: false,
   },
+});
+
+modelProduto.hasMany(modelMovimentacao, {
+  foreignKey: 'cod_produto',
+});
+
+modelMovimentacao.belongsTo(modelProduto, {
+  foreignKey: 'cod_produto',
 });
 
 // modelMovimentacao.sync({ force: true });

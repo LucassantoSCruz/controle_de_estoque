@@ -11,6 +11,9 @@ const ModalEditProduto = (props) => {
   const [novoEstoque, setNovoEstoque] = useState(props.estoque);
   const [novoCodCategoria, setNovoCodCategoria] = useState(props.categoria);
   const [image, setImage] = useState(props.image);
+  const [imagePreview, setImagePreview] = useState(
+    props.image ? `${ENDERECO_API}/uploads/${props.image}` : null // 👈 começa com a imagem atual
+  );
 
   const [listagemCategoria, setListagemCategoria] = useState([]);
 
@@ -24,12 +27,9 @@ const ModalEditProduto = (props) => {
       .get(ENDERECO_API + '/listarCategoria')
       .then((response) => {
         setListagemCategoria(response.data.data);
-        console.log(response.data.data);
-        setLoading(false);
       })
       .catch((error) => {
         console.log('Erro ao buscar dados:', error);
-        setLoading(false);
       });
   }, []);
 
@@ -48,11 +48,22 @@ const ModalEditProduto = (props) => {
   function handleChangeCodCategoria(e) {
     setNovoCodCategoria(e.target.value);
   }
+
   const handleFileChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    setImage(file);
+
+    if (file) {
+      setImagePreview(URL.createObjectURL(file)); // 👈 troca pelo preview do novo arquivo
+    } else {
+      setImagePreview(
+        props.image ? `${ENDERECO_API}/uploads/${props.image}` : null
+      ); // 👈 volta pra imagem original
+    }
   };
 
   function handleSubmit(e) {
+    e.preventDefault();
     const formData = new FormData();
     formData.append('cod_produto', props.id);
     formData.append('nome_produto', novoProduto);
@@ -61,25 +72,18 @@ const ModalEditProduto = (props) => {
     formData.append('cod_categoria', novoCodCategoria);
 
     if (image instanceof File) {
-      // só envia o arquivo se for um File (upload novo)
       formData.append('image', image);
     }
-    // se image for uma string (URL da imagem atual), você não envia o campo image
-    // e o backend mantém a imagem antiga
 
     axios
       .put(ENDERECO_API + '/alterarProduto', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
-      .then(function (response) {
+      .then((response) => {
         console.log(response);
         closeModal();
       })
-      .catch(function (error) {
-        console.log(error);
-      });
+      .catch((error) => console.log(error));
   }
 
   return (
@@ -90,7 +94,6 @@ const ModalEditProduto = (props) => {
 
       <div
         className="modal fade"
-        id="exampleModal"
         tabIndex="-1"
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
@@ -106,11 +109,11 @@ const ModalEditProduto = (props) => {
                 <button
                   type="button"
                   className="btn-close"
-                  data-bs-dismiss="modal"
                   aria-label="Close"
                   onClick={closeModal}
                 ></button>
               </div>
+
               <div className="modal-body">
                 <label className="form-label">Imagem do produto</label>
                 <input
@@ -120,30 +123,47 @@ const ModalEditProduto = (props) => {
                   name="image"
                 />
 
-                <label class="form-label">Nome</label>
+                {/* Preview — mostra imagem atual ou a nova selecionada */}
+                {imagePreview && (
+                  <div className="mt-2 text-center">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '300px',
+                        height: '300px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #dee2e6',
+                      }}
+                    />
+                  </div>
+                )}
+
+                <label className="form-label mt-2">Nome</label>
                 <input
-                  class="form-control"
+                  className="form-control"
                   type="text"
                   placeholder="Digite o nome"
                   value={novoProduto}
                   onChange={handleChangeProduto}
                 />
 
-                <div class="row align-items-start">
-                  <div class="col">
-                    <label class="form-label mt-2">Preço</label>
+                <div className="row align-items-start">
+                  <div className="col">
+                    <label className="form-label mt-2">Preço</label>
                     <input
-                      class="form-control"
+                      className="form-control"
                       type="number"
                       placeholder="0,00"
                       value={novoPreco}
                       onChange={handleChangePreco}
                     />
                   </div>
-                  <div class="col">
-                    <label class="form-label mt-2">Quantidade</label>
+                  <div className="col">
+                    <label className="form-label mt-2">Quantidade</label>
                     <input
-                      class="form-control"
+                      className="form-control"
                       type="number"
                       placeholder="0"
                       value={novoEstoque}
@@ -152,7 +172,7 @@ const ModalEditProduto = (props) => {
                   </div>
                 </div>
 
-                <label class="form-label mt-2">Categoria</label>
+                <label className="form-label mt-2">Categoria</label>
                 {Array.isArray(listagemCategoria) &&
                 listagemCategoria.length > 0 ? (
                   <select
@@ -172,11 +192,7 @@ const ModalEditProduto = (props) => {
                     ))}
                   </select>
                 ) : (
-                  <select
-                    className="form-select"
-                    aria-label="Disabled select example"
-                    disabled
-                  >
+                  <select className="form-select" disabled>
                     <option>Nenhuma categoria cadastrada</option>
                   </select>
                 )}
@@ -186,7 +202,6 @@ const ModalEditProduto = (props) => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  data-bs-dismiss="modal"
                   onClick={closeModal}
                 >
                   Cancelar

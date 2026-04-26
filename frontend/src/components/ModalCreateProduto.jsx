@@ -11,6 +11,7 @@ const ModalCreateProduto = () => {
   const [novoEstoque, setNovoEstoque] = useState('');
   const [novoCodCategoria, setNovoCodCategoria] = useState('');
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // 👈
 
   const [listagemCategoria, setListagemCategoria] = useState([]);
 
@@ -49,7 +50,14 @@ const ModalCreateProduto = () => {
     setNovoCodCategoria(e.target.value);
   }
   const handleFileChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    setImage(file);
+
+    if (file) {
+      setImagePreview(URL.createObjectURL(file)); // 👈 gera URL temporária
+    } else {
+      setImagePreview(null);
+    }
   };
 
   function handleSubmit(e) {
@@ -75,6 +83,7 @@ const ModalCreateProduto = () => {
         setNovoEstoque('');
         setNovoCodCategoria('');
         setImage(null);
+        setImagePreview(null);
         closeModal();
       })
       .catch(function (error) {
@@ -118,6 +127,23 @@ const ModalCreateProduto = () => {
                   className="form-control"
                   onChange={handleFileChange}
                 />
+
+                {/* Preview */}
+                {imagePreview && (
+                  <div className="mt-2 text-center">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '300px',
+                        height: '300px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #dee2e6',
+                      }}
+                    />
+                  </div>
+                )}
 
                 <label class="form-label">Nome</label>
                 <input
