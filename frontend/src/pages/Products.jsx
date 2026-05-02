@@ -22,9 +22,8 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState(filtroNome || '');
 
-  useEffect(() => {
+  const buscarProdutos = () => {
     setLoading(true);
-
     axios
       .get(ENDERECO_API + '/listarProdutoComCategoria')
       .then((response) => {
@@ -46,18 +45,22 @@ const Products = () => {
 
         setProducts(produtos);
       })
-      .catch((error) => console.log('Erro ao buscar produtos:', error));
+      .catch((error) => console.log('Erro ao buscar produtos:', error))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    buscarProdutos();
 
     axios
       .get(ENDERECO_API + '/listarCategoria')
       .then((response) => setCategorias(response.data.data))
-      .catch((error) => console.log('Erro ao buscar categorias:', error))
-      .finally(() => setLoading(false));
+      .catch((error) => console.log('Erro ao buscar categorias:', error));
   }, [filtroEstoque, filtroCategoria, filtroNome]);
 
   const excluirProduto = async (cod_produto) => {
     await axios.delete(ENDERECO_API + `/excluirProduto/${cod_produto}`);
-    window.location.reload();
+    buscarProdutos(); // 👈 sem reload
   };
 
   const aplicarFiltro = (categoria, estoque, nome) => {
@@ -76,7 +79,7 @@ const Products = () => {
       <div className="container mt-4 flex-grow-1 p-4">
         <div className="d-flex justify-content-between align-items-center my-4">
           <h1>Produtos</h1>
-          <ModalCreateProduto />
+          <ModalCreateProduto onProdutoCadastrado={buscarProdutos} />
         </div>
 
         <ProductFilterBadges
@@ -97,7 +100,6 @@ const Products = () => {
           limparFiltro={() => navigate('/products')}
         />
 
-        {/* Tabela inline */}
         <div className="table-responsive">
           <table className="table table-hover">
             <thead>
@@ -145,6 +147,7 @@ const Products = () => {
                           estoque={product.estoque_atual}
                           categoria={product.cod_categoria}
                           image={product.caminho_imagem}
+                          onProdutoEditado={buscarProdutos}
                         />
                         <button
                           className="btn btn-danger"

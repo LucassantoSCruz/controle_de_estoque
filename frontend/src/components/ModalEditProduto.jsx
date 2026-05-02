@@ -2,19 +2,29 @@ import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Modal } from 'bootstrap';
 import { ENDERECO_API } from '../config';
+import Toast from './Toast';
 
-const ModalEditProduto = (props) => {
+const ModalEditProduto = ({
+  id,
+  nome,
+  preco,
+  estoque,
+  categoria,
+  image,
+  onProdutoEditado,
+}) => {
   const modalRef = useRef(null);
   const [modal, setModal] = useState(null);
-  const [novoProduto, setNovoProduto] = useState(props.nome);
-  const [novoPreco, setNovoPreco] = useState(props.preco);
-  const [novoEstoque, setNovoEstoque] = useState(props.estoque);
-  const [novoCodCategoria, setNovoCodCategoria] = useState(props.categoria);
-  const [image, setImage] = useState(props.image);
+  const [novoProduto, setNovoProduto] = useState(nome);
+  const [novoPreco, setNovoPreco] = useState(preco);
+  const [novoEstoque, setNovoEstoque] = useState(estoque);
+  const [novoCodCategoria, setNovoCodCategoria] = useState(categoria);
+  const [img, setImg] = useState(image);
   const [imagePreview, setImagePreview] = useState(
-    props.image ? `${ENDERECO_API}/uploads/${props.image}` : null // 👈 começa com a imagem atual
+    image ? `${ENDERECO_API}/uploads/${image}` : null
   );
-
+  const [erro, setErro] = useState('');
+  const [toast, setToast] = useState({ mensagem: '', tipo: 'success' });
   const [listagemCategoria, setListagemCategoria] = useState([]);
 
   useEffect(() => {
@@ -25,55 +35,49 @@ const ModalEditProduto = (props) => {
   useEffect(() => {
     axios
       .get(ENDERECO_API + '/listarCategoria')
-      .then((response) => {
-        setListagemCategoria(response.data.data);
-      })
-      .catch((error) => {
-        console.log('Erro ao buscar dados:', error);
-      });
+      .then((response) => setListagemCategoria(response.data.data))
+      .catch((error) => console.log('Erro ao buscar categorias:', error));
   }, []);
 
-  const openModal = () => modal?.show();
+  const openModal = () => {
+    setErro('');
+    modal?.show();
+  };
   const closeModal = () => modal?.hide();
-
-  function handleChangeProduto(e) {
-    setNovoProduto(e.target.value);
-  }
-  function handleChangePreco(e) {
-    setNovoPreco(e.target.value);
-  }
-  function handleChangeEstoque(e) {
-    setNovoEstoque(e.target.value);
-  }
-  function handleChangeCodCategoria(e) {
-    setNovoCodCategoria(e.target.value);
-  }
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setImage(file);
-
-    if (file) {
-      setImagePreview(URL.createObjectURL(file)); // 👈 troca pelo preview do novo arquivo
-    } else {
-      setImagePreview(
-        props.image ? `${ENDERECO_API}/uploads/${props.image}` : null
-      ); // 👈 volta pra imagem original
-    }
+    setImg(file);
+    setImagePreview(
+      file
+        ? URL.createObjectURL(file)
+        : image
+          ? `${ENDERECO_API}/uploads/${image}`
+          : null
+    );
   };
 
   function handleSubmit(e) {
     e.preventDefault();
+
+    if (!novoProduto || !novoPreco || !novoEstoque || !novoCodCategoria) {
+      setErro('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (Number(novoPreco) < 0 || Number(novoEstoque) < 0) {
+      setErro('Preço e quantidade não podem ser negativos.');
+      return;
+    }
+
+    setErro('');
+
     const formData = new FormData();
-    formData.append('cod_produto', props.id);
+    formData.append('cod_produto', id);
     formData.append('nome_produto', novoProduto);
     formData.append('preco_produto', novoPreco);
     formData.append('estoque_atual', novoEstoque);
     formData.append('cod_categoria', novoCodCategoria);
-
-    if (image instanceof File) {
-      formData.append('image', image);
-    }
+    if (img instanceof File) formData.append('image', img);
 
     axios
       .put(ENDERECO_API + '/alterarProduto', formData, {
@@ -81,13 +85,21 @@ const ModalEditProduto = (props) => {
       })
       .then((response) => {
         console.log(response);
+        setErro('');
         closeModal();
+        setToast({ mensagem: 'Produto editado com sucesso!', tipo: 'success' });
+        onProdutoEditado(); // 👈 atualiza a lista
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.log(error);
+        setToast({ mensagem: 'Erro ao editar produto.', tipo: 'danger' });
+      });
   }
 
   return (
     <>
+      <Toast mensagem={toast.mensagem} tipo={toast.tipo} />
+
       <button type="button" className="btn btn-secondary" onClick={openModal}>
         Editar
       </button>
@@ -100,7 +112,7 @@ const ModalEditProduto = (props) => {
         ref={modalRef}
       >
         <div className="modal-dialog">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="modal-content">
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="exampleModalLabel">
@@ -111,10 +123,12 @@ const ModalEditProduto = (props) => {
                   className="btn-close"
                   aria-label="Close"
                   onClick={closeModal}
-                ></button>
+                />
               </div>
 
               <div className="modal-body">
+                {erro && <div className="alert alert-danger py-2">{erro}</div>}
+
                 <label className="form-label">Imagem do produto</label>
                 <input
                   type="file"
@@ -123,7 +137,6 @@ const ModalEditProduto = (props) => {
                   name="image"
                 />
 
-                {/* Preview — mostra imagem atual ou a nova selecionada */}
                 {imagePreview && (
                   <div className="mt-2 text-center">
                     <img
@@ -146,7 +159,7 @@ const ModalEditProduto = (props) => {
                   type="text"
                   placeholder="Digite o nome"
                   value={novoProduto}
-                  onChange={handleChangeProduto}
+                  onChange={(e) => setNovoProduto(e.target.value)}
                 />
 
                 <div className="row align-items-start">
@@ -156,8 +169,9 @@ const ModalEditProduto = (props) => {
                       className="form-control"
                       type="number"
                       placeholder="0,00"
+                      min="0"
                       value={novoPreco}
-                      onChange={handleChangePreco}
+                      onChange={(e) => setNovoPreco(e.target.value)}
                     />
                   </div>
                   <div className="col">
@@ -166,8 +180,9 @@ const ModalEditProduto = (props) => {
                       className="form-control"
                       type="number"
                       placeholder="0"
+                      min="0"
                       value={novoEstoque}
-                      onChange={handleChangeEstoque}
+                      onChange={(e) => setNovoEstoque(e.target.value)}
                     />
                   </div>
                 </div>
@@ -178,8 +193,7 @@ const ModalEditProduto = (props) => {
                   <select
                     className="form-select"
                     value={novoCodCategoria}
-                    onChange={handleChangeCodCategoria}
-                    aria-label="Selecione a categoria"
+                    onChange={(e) => setNovoCodCategoria(e.target.value)}
                   >
                     <option value="">Selecione uma categoria</option>
                     {listagemCategoria.map((categoria) => (

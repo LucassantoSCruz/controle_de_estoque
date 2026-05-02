@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Modal } from 'bootstrap';
 import { ENDERECO_API } from '../config';
+import Toast from './Toast';
 
-const ModalCreateProduto = () => {
+const ModalCreateProduto = ({ onProdutoCadastrado }) => {
   const modalRef = useRef(null);
   const [modal, setModal] = useState(null);
   const [novoProduto, setNovoProduto] = useState('');
@@ -11,9 +12,10 @@ const ModalCreateProduto = () => {
   const [novoEstoque, setNovoEstoque] = useState('');
   const [novoCodCategoria, setNovoCodCategoria] = useState('');
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // 👈
-
+  const [imagePreview, setImagePreview] = useState(null);
+  const [erro, setErro] = useState('');
   const [listagemCategoria, setListagemCategoria] = useState([]);
+  const [toast, setToast] = useState({ mensagem: '', tipo: 'success' });
 
   useEffect(() => {
     setModal(new Modal(modalRef.current));
@@ -23,60 +25,48 @@ const ModalCreateProduto = () => {
   useEffect(() => {
     axios
       .get(ENDERECO_API + '/listarCategoria')
-      .then((response) => {
-        setListagemCategoria(response.data.data);
-        console.log(response.data.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.log('Erro ao buscar dados:', error);
-        setLoading(false);
-      });
+      .then((response) => setListagemCategoria(response.data.data))
+      .catch((error) => console.log('Erro ao buscar categorias:', error));
   }, []);
 
-  const openModal = () => modal?.show();
+  const openModal = () => {
+    setErro('');
+    modal?.show();
+  };
   const closeModal = () => modal?.hide();
 
-  function handleChangeProduto(e) {
-    setNovoProduto(e.target.value);
-  }
-  function handleChangePreco(e) {
-    setNovoPreco(e.target.value);
-  }
-  function handleChangeEstoque(e) {
-    setNovoEstoque(e.target.value);
-  }
-  function handleChangeCodCategoria(e) {
-    setNovoCodCategoria(e.target.value);
-  }
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
-
-    if (file) {
-      setImagePreview(URL.createObjectURL(file)); // 👈 gera URL temporária
-    } else {
-      setImagePreview(null);
-    }
+    setImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
   function handleSubmit(e) {
+    e.preventDefault();
+
+    if (!novoProduto || !novoPreco || !novoEstoque || !novoCodCategoria) {
+      setErro('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (Number(novoPreco) < 0 || Number(novoEstoque) < 0) {
+      setErro('Preço e quantidade não podem ser negativos.');
+      return;
+    }
+
+    setErro('');
+
     const formData = new FormData();
     formData.append('nome_produto', novoProduto);
     formData.append('preco_produto', novoPreco);
     formData.append('estoque_atual', novoEstoque);
     formData.append('cod_categoria', novoCodCategoria);
-    if (image) {
-      formData.append('image', image);
-    }
+    if (image) formData.append('image', image);
 
     axios
       .post(ENDERECO_API + '/cadastrarProduto', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
-      .then(function (response) {
+      .then((response) => {
         console.log(response);
         setNovoProduto('');
         setNovoPreco('');
@@ -84,29 +74,37 @@ const ModalCreateProduto = () => {
         setNovoCodCategoria('');
         setImage(null);
         setImagePreview(null);
+        setErro('');
         closeModal();
+        setToast({
+          mensagem: 'Produto cadastrado com sucesso!',
+          tipo: 'success',
+        });
+        onProdutoCadastrado(); // 👈 atualiza a lista
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log(error);
+        setToast({ mensagem: 'Erro ao cadastrar produto.', tipo: 'danger' });
       });
   }
 
   return (
     <>
+      <Toast mensagem={toast.mensagem} tipo={toast.tipo} />
+
       <button type="button" className="btn btn-primary" onClick={openModal}>
         Cadastrar Produto
       </button>
 
       <div
         className="modal fade"
-        id="exampleModal"
         tabIndex="-1"
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
         ref={modalRef}
       >
         <div className="modal-dialog">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="modal-content">
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="exampleModalLabel">
@@ -115,12 +113,14 @@ const ModalCreateProduto = () => {
                 <button
                   type="button"
                   className="btn-close"
-                  data-bs-dismiss="modal"
                   aria-label="Close"
                   onClick={closeModal}
-                ></button>
+                />
               </div>
+
               <div className="modal-body">
+                {erro && <div className="alert alert-danger py-2">{erro}</div>}
+
                 <label className="form-label">Imagem do produto</label>
                 <input
                   type="file"
@@ -128,7 +128,6 @@ const ModalCreateProduto = () => {
                   onChange={handleFileChange}
                 />
 
-                {/* Preview */}
                 {imagePreview && (
                   <div className="mt-2 text-center">
                     <img
@@ -145,46 +144,47 @@ const ModalCreateProduto = () => {
                   </div>
                 )}
 
-                <label class="form-label">Nome</label>
+                <label className="form-label mt-2">Nome</label>
                 <input
-                  class="form-control"
+                  className="form-control"
                   type="text"
                   placeholder="Digite o nome"
                   value={novoProduto}
-                  onChange={handleChangeProduto}
+                  onChange={(e) => setNovoProduto(e.target.value)}
                 />
 
-                <div class="row align-items-start">
-                  <div class="col">
-                    <label class="form-label mt-2">Preço</label>
+                <div className="row align-items-start">
+                  <div className="col">
+                    <label className="form-label mt-2">Preço</label>
                     <input
-                      class="form-control"
+                      className="form-control"
                       type="number"
                       placeholder="0,00"
+                      min="0"
                       value={novoPreco}
-                      onChange={handleChangePreco}
+                      onChange={(e) => setNovoPreco(e.target.value)}
                     />
                   </div>
-                  <div class="col">
-                    <label class="form-label mt-2">Quantidade</label>
+                  <div className="col">
+                    <label className="form-label mt-2">Quantidade</label>
                     <input
-                      class="form-control"
+                      className="form-control"
                       type="number"
                       placeholder="0"
+                      min="0"
                       value={novoEstoque}
-                      onChange={handleChangeEstoque}
+                      onChange={(e) => setNovoEstoque(e.target.value)}
                     />
                   </div>
                 </div>
 
-                <label class="form-label mt-2">Categoria</label>
+                <label className="form-label mt-2">Categoria</label>
                 {Array.isArray(listagemCategoria) &&
                 listagemCategoria.length > 0 ? (
                   <select
                     className="form-select"
                     value={novoCodCategoria}
-                    onChange={handleChangeCodCategoria}
-                    aria-label="Selecione a categoria"
+                    onChange={(e) => setNovoCodCategoria(e.target.value)}
                   >
                     <option value="">Selecione uma categoria</option>
                     {listagemCategoria.map((categoria) => (
@@ -197,11 +197,7 @@ const ModalCreateProduto = () => {
                     ))}
                   </select>
                 ) : (
-                  <select
-                    className="form-select"
-                    aria-label="Disabled select example"
-                    disabled
-                  >
+                  <select className="form-select" disabled>
                     <option>Nenhuma categoria cadastrada</option>
                   </select>
                 )}
@@ -211,7 +207,6 @@ const ModalCreateProduto = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  data-bs-dismiss="modal"
                   onClick={closeModal}
                 >
                   Cancelar
