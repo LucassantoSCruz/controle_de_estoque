@@ -1,26 +1,29 @@
+require('dotenv').config();
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_NAME:', process.env.DB_NAME);
+
 const express = require('express');
-const app = express();
 const cors = require('cors');
-const port = 3000;
 const path = require('path');
+const app = express();
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-const routeCategoria = require('./route/routeCategoria');
-const routeProduto = require('./route/routeProduto');
-const routeMovimentacao = require('./route/routeMovimentacao');
+const port = process.env.PORT || 3001;
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: frontendUrl,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
+app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(express.json());
+const routeCategoria = require('./route/routeCategoria');
+const routeProduto = require('./route/routeProduto');
+const routeMovimentacao = require('./route/routeMovimentacao');
 
 app.use('/', routeCategoria);
 app.use('/', routeProduto);

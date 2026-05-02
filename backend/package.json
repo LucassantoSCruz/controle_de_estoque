@@ -12,6 +12,7 @@
   "dependencies": {
     "@sequelize/mysql": "^7.0.0-alpha.47",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "multer": "^2.0.2",
     "sequelize": "^6.37.7",
