@@ -12,6 +12,7 @@ const modelCategoria = connection.define('tbl_categoria', {
     type: sequelize.STRING(50),
     allowNull: false,
   },
+  freezeTableName: true,
 });
 
 // modelCategoria.sync({ force: true });

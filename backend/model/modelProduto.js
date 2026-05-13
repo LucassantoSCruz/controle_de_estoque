@@ -29,6 +29,7 @@ const modelProduto = connection.define('tbl_produto', {
     type: sequelize.STRING,
     allowNull: true,
   },
+  freezeTableName: true,
 });
 
 modelCategoria.hasMany(modelProduto, {

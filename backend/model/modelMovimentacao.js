@@ -34,6 +34,7 @@ const modelMovimentacao = connection.define('tbl_movimentacao', {
     type: sequelize.STRING(150),
     allowNull: false,
   },
+  freezeTableName: true,
 });
 
 modelProduto.hasMany(modelMovimentacao, {
