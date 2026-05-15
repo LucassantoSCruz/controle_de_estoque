@@ -14,7 +14,6 @@ const modelCategoria = connection.define(
       type: sequelize.STRING(50),
       allowNull: false,
     },
-    freezeTableName: true,
   },
   {
     freezeTableName: true,
