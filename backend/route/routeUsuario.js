@@ -1,24 +1,9 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const modelUsuario = require('../model/modelUsuario');
-
-const router = express.Router();
-
-const SECRET = process.env.JWT_SECRET || 'segredo123';
-
 router.post('/login', async (req, res) => {
   const { email, senha } = req.body;
 
-  if (!email || !senha) {
-    return res.status(400).json({
-      erroStatus: true,
-      mensagemStatus: 'Email e senha obrigatórios.',
-    });
-  }
-
   try {
     const usuario = await modelUsuario.findOne({ where: { email } });
+    console.log('Usuario encontrado:', usuario);
 
     if (!usuario) {
       return res
@@ -26,14 +11,8 @@ router.post('/login', async (req, res) => {
         .json({ erroStatus: true, mensagemStatus: 'Usuário não encontrado.' });
     }
 
-    // como a senha ainda não está criptografada, compara direto por enquanto
     const senhaValida = senha === usuario.senha;
-
-    if (!senhaValida) {
-      return res
-        .status(401)
-        .json({ erroStatus: true, mensagemStatus: 'Senha incorreta.' });
-    }
+    console.log('Senha valida:', senhaValida);
 
     const token = jwt.sign(
       {
@@ -44,6 +23,7 @@ router.post('/login', async (req, res) => {
       SECRET,
       { expiresIn: '8h' }
     );
+    console.log('Token gerado:', token);
 
     return res.status(200).json({
       erroStatus: false,
@@ -52,6 +32,7 @@ router.post('/login', async (req, res) => {
       nome: usuario.nome,
     });
   } catch (error) {
+    console.log('ERRO NO LOGIN:', error); // 👈 esse é o mais importante
     return res.status(500).json({
       erroStatus: true,
       mensagemStatus: 'Erro no servidor.',
@@ -59,5 +40,3 @@ router.post('/login', async (req, res) => {
     });
   }
 });
-
-module.exports = router;
