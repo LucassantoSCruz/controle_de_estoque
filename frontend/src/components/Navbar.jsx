@@ -50,6 +50,19 @@ const Navbar = () => {
                 </Link>
               </li>
             ))}
+
+            <li className="nav-item ms-3">
+              <button
+                className="btn btn-outline-light btn-sm"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('nome');
+                  window.location.href = '/login';
+                }}
+              >
+                Sair
+              </button>
+            </li>
           </ul>
         </div>
       </div>
