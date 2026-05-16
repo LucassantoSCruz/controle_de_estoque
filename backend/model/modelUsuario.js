@@ -25,6 +25,7 @@ const modelUsuario = connection.define(
   },
   {
     freezeTableName: true,
+    timestamps: false,
   }
 );
 
