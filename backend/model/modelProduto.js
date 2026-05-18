@@ -16,7 +16,7 @@ const modelProduto = connection.define(
       allowNull: false,
     },
     preco_produto: {
-      type: sequelize.DECIMAL(3, 2),
+      type: sequelize.DECIMAL(5, 2),
       allowNull: false,
     },
     estoque_atual: {
